@@ -88,7 +88,8 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-
+  p->nice = NICE_DEFAULT;
+  
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -531,4 +532,23 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int 
+getnice(int pid) {            //project1
+  struct proc* p;
+  
+}
+int 
+setnice(int pid, int value) { //project1
+  struct proc* p;
+  if (value < NICE_MIN || value > NICE_MAX) return -1;
+  acquire(&ptable.lock);
+  //Start from here,
+  release(&ptable.lock);
+}
+void 
+ps(int pid){                 //project1
+  struct proc* p;
+  
 }

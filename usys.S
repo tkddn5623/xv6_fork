@@ -29,3 +29,6 @@ SYSCALL(getpid)
 SYSCALL(sbrk)
 SYSCALL(sleep)
 SYSCALL(uptime)
+SYSCALL(getnice) # project1
+SYSCALL(setnice) # project1
+SUSCALL(ps)      # project1
