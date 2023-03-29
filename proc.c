@@ -535,20 +535,66 @@ procdump(void)
 }
 
 int 
-getnice(int pid) {            //project1
+getnice(int pid) { //project1
   struct proc* p;
-  
+  int nice;
+  acquire(&ptable.lock);
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if (p->pid == pid) {
+      nice = p->nice;
+      release(&ptable.lock);
+      return nice;
+    }
+  }
+  release(&ptable.lock);
+  return -1;
 }
 int 
 setnice(int pid, int value) { //project1
   struct proc* p;
   if (value < NICE_MIN || value > NICE_MAX) return -1;
   acquire(&ptable.lock);
-  //Start from here,
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if (p->pid == pid) {
+      p->nice = value;
+      release(&ptable.lock);
+      return 0;
+    }
+  }
   release(&ptable.lock);
+  return -1;
 }
 void 
-ps(int pid){                 //project1
+ps(int pid){ //project1
+  static char* states[] = {
+  [UNUSED]    "UNUSED  ",
+  [EMBRYO]    "EMBRYO  ",
+  [SLEEPING]  "SLEEPING",
+  [RUNNABLE]  "RUNNABLE",
+  [RUNNING]   "RUNNING ",
+  [ZOMBIE]    "ZOMBIE  "
+  };
   struct proc* p;
-  
+  char* state;
+  int init;
+
+  init = 0;
+  acquire(&ptable.lock);
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if (pid && pid != p->pid)
+      continue;
+    if (p->state == UNUSED)
+      continue;
+    if (p->state >= 0 && p->state < NELEM(states) && states[p->state])
+      state = states[p->state];
+    else
+      state = "???";
+    if (!init) {
+      cprintf("name \t\tpid \tstate \t\tpriority\n");
+      init = 1;
+    }
+    cprintf("%s \t\t%d \t%s \t%d", p->name, p->pid, state, p->nice);
+    cprintf("\n");
+  }
+  release(&ptable.lock);
 }

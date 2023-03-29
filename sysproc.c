@@ -100,7 +100,7 @@ sys_getnice(void) {  //Project1
 int
 sys_setnice(void) {  //Project1
   int pid, value;
-  if (argint(0, &pid) < 0 || argint(1, &value < 0))
+  if (argint(0, &pid) < 0 || argint(1, &value) < 0)
     return -1;
   return setnice(pid, value);
 }

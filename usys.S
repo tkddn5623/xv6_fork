@@ -31,4 +31,4 @@ SYSCALL(sleep)
 SYSCALL(uptime)
 SYSCALL(getnice) # project1
 SYSCALL(setnice) # project1
-SUSCALL(ps)      # project1
+SYSCALL(ps)      # project1
