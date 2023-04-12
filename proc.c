@@ -103,6 +103,7 @@ found:
   p->pid = nextpid++;
   p->nice = NICE_DEFAULT;  // project1
   p->runtime = 0;          // project2
+  p->vruntime = 0;         // project2
 
   release(&ptable.lock);
 
