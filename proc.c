@@ -378,9 +378,11 @@ scheduler(void) //project2
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       ts = (SCHED_LATENCY * prio_to_weight[next->nice]) / totalweight;
-      if (ts >= MIN_GRANULARITY) next->timeslice = ts;
-      else next->timeslice = MIN_GRANULARITY;
-
+      if (ts >= MIN_GRANULARITY) next->timeslice = ts; //project2
+      else next->timeslice = MIN_GRANULARITY;          //project2
+      //  This MIN_GRANULARITY of code prevents too many context switches
+      //  (Although this code can ignore the ratio according to the nice value)
+      //  Reference: Our book Three picecs 105page. 
       c->proc = next;
       switchuvm(next);
       next->state = RUNNING;
@@ -631,16 +633,9 @@ ps(int pid) { //project1
   struct proc* p;
   char* state;
   int init;
-  int totalweight;
 
   init = 0;
   acquire(&ptable.lock);
-  totalweight = 0;
-  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-    if (p->state != RUNNABLE && p->state != RUNNING) 
-      continue;
-    totalweight += prio_to_weight[p->nice];
-  }
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
     if (pid && pid != p->pid)
       continue;
@@ -651,11 +646,14 @@ ps(int pid) { //project1
     else
       state = "???";
     if (!init) {
-      cprintf("name \t\tpid \t\tstate\t \t\tpriority \truntime/weight\t \truntime\t \t\t\tvruntime \t\ttick %d\n", ticks * 1000);
+      cprintf("name \t\tpid \t\tstate\t \t\tpriority \truntime/weight \t\t");
+      cprintf("runtime \t\tvruntime \t\ttick %d\n", ticks * 1000);
       init = 1;
     }
-    cprintf("%s \t\t%d \t\t%s\t \t%d\t \t%d\t \t\t%d\t\t \t\t%d[%d,%d]\n",
-      p->name, p->pid, state, p->nice, p->runtime * 1000 / totalweight, p->runtime * 1000, p->vruntime * 1000, p->timeslice, p->timeslice_used);
+    cprintf("%s \t\t%d \t\t%s\t \t%d\t \t%d\t\t\t",
+      p->name, p->pid, state, p->nice, p->runtime * 1000 / prio_to_weight[p->nice]);
+    cprintf("%d\t\t\t%d\t\t\t\n",
+      p->runtime * 1000, p->vruntime * 1000);
   }
   release(&ptable.lock);
 }
@@ -664,10 +662,11 @@ static void //project 2
 _vruntime_add(struct proc* target) {
   //This function assumes the caller acquired lock.
   struct proc* p;
-  const int runtime_delta = target->timeslice_used >= 1 ? target->timeslice_used : 1;
+  int runtime_delta = target->timeslice_used >= 1 ? target->timeslice_used : 1;      //Lower bound : 1
+  if (runtime_delta > target->timeslice) runtime_delta = target->timeslice;          //Upper bound : its timeslices (1 ~ 10)
   int vrun_increment;
   int maxvrun = 0;
-  int minvrun = 1 << 30;
+  int minvrun = 1 << 30; //1,073,741,824
   target->timeslice_used = 0;
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
     if (p->state != RUNNABLE && p->state != RUNNING) 
@@ -681,7 +680,7 @@ _vruntime_add(struct proc* target) {
   if (vrun_increment >= 1) target->vruntime += vrun_increment;
   else target->vruntime++;
     
-  if (maxvrun > (1 << 30)) //1,073,741,824
+  if (maxvrun > (1 << 27)) //134,217,728
     _vruntime_warp(minvrun);
 }
 

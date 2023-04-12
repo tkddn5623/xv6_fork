@@ -4,6 +4,10 @@
 int main() {
     static int ar[1000];
     int range = 1 << 30;
+    // int pid;
+    /*if (((pid = fork()) == 0)) {
+        setnice(pid, 10);
+    }*/
     for (int i = 0; i < range; i++) {
         int ii = i % 10000;
         ar[ii]++;
