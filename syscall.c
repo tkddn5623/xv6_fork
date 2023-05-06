@@ -106,6 +106,9 @@ extern int  sys_uptime(void);
 extern int  sys_getnice(void); //Project1
 extern int  sys_setnice(void); //Project1
 extern int  sys_ps(void);      //Project1
+extern int  sys_mmap(void);    //Project3
+extern int  sys_munmap(void);  //Project3
+extern int  sys_freemem(void); //Project3
 
 
 static int (*syscalls[])(void) = {
@@ -133,6 +136,9 @@ static int (*syscalls[])(void) = {
 [SYS_getnice] sys_getnice,
 [SYS_setnice] sys_setnice,
 [SYS_ps]      sys_ps,
+[SYS_mmap]    sys_mmap,
+[SYS_munmap]  sys_munmap,
+[SYS_freemem] sys_freemem,
 };
 
 void

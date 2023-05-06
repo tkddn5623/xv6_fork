@@ -26,6 +26,9 @@ int uptime(void);
 int getnice(int);      //project1
 int setnice(int, int); //project1
 void ps(int);          //project1
+uint mmap(uint addr, int, int, int, int, int); //project3
+int munmap(uint addr);                         //project3
+int freemem(void);                             //project3
 
 // ulib.c
 int stat(const char*, struct stat*);

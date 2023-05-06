@@ -23,3 +23,6 @@
 #define SYS_getnice 22 //Project1
 #define SYS_setnice 23 //Project1
 #define SYS_ps      24 //Project1
+#define SYS_mmap    25 //Project3
+#define SYS_munmap  26 //Project3
+#define SYS_freemem 27 //Project3
