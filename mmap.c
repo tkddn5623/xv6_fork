@@ -12,3 +12,9 @@ struct {
     struct spinlock lock;
     struct mmap_area m_area[MAX_MMAPAREA];
 } mtable;
+
+/* Return current number of free memory pages */
+int
+freemem(void) {
+    return kmem_len();
+}

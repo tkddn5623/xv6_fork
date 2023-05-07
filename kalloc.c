@@ -94,3 +94,18 @@ kalloc(void)
   return (char*)r;
 }
 
+/* Return current number of free memory pages */
+int
+kmem_len(void) {
+  struct run* r;
+  int i = 0;
+  if (kmem.use_lock)
+    acquire(&kmem.lock);
+  for (r = kmem.freelist; r; r = r->next) {
+    i++;
+  }
+  if (kmem.use_lock)
+    release(&kmem.lock);
+  return i;
+}
+

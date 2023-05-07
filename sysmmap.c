@@ -27,6 +27,5 @@ sys_munmap(void) { //Project3
 
 int
 sys_freemem(void) { //Project3
-    return 0;
-    return -1;
+    return freemem();
 }

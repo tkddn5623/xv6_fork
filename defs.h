@@ -68,6 +68,7 @@ char*           kalloc(void);
 void            kfree(char*);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
+int             kmem_len(void); //Project3, Alias of freemem(void)
 
 // kbd.c
 void            kbdintr(void);
@@ -192,4 +193,5 @@ void            clearpteu(pde_t *pgdir, char *uva);
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
 
-// mmap.c //Project3
+// mmap.c (Project3)
+int             freemem(void); //Alias of kmem_len(void)
