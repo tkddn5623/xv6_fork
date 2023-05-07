@@ -60,15 +60,18 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 static int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
-  char *a, *last;
+  cprintf("MAPPAGE HERE!\n");
+  char* a, * last;
   pte_t *pte;
 
   a = (char*)PGROUNDDOWN((uint)va);
   last = (char*)PGROUNDDOWN(((uint)va) + size - 1);
   for(;;){
-    if((pte = walkpgdir(pgdir, a, 1)) == 0)
+    if ((pte = walkpgdir(pgdir, a, 1)) == 0) {
+      cprintf("MAPPAGE return -1!\n");
       return -1;
-    if(*pte & PTE_P)
+    }
+    if (*pte & PTE_P)
       panic("remap");
     *pte = pa | perm | PTE_P;
     if(a == last)
@@ -76,6 +79,7 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
     a += PGSIZE;
     pa += PGSIZE;
   }
+  cprintf("MAPPAGE return 0!\n");
   return 0;
 }
 
