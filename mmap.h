@@ -17,6 +17,7 @@ struct mmap_area {
     int prot;
     int flags;
     struct proc* p; // the process with this mmap_area
+    int occupied;
 };
 
 
