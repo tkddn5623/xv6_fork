@@ -77,7 +77,10 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
-
+  case T_PGFLT: //project3: Page Fault
+    cprintf("PGFLT OCCUR\n");
+    
+    break;
   //PAGEBREAK: 13
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){

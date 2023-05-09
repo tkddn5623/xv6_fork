@@ -7,6 +7,7 @@
 #define MAP_POPULATE  0x2
 #define MAX_MMAPAREA  64
 #define MAP_FAILED	  ((uint)-1)
+#define MMAP_BASE     0x40000000
 #endif
 
 struct mmap_area {

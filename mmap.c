@@ -21,6 +21,7 @@ mmap(uint addr, int length, int prot, int flags, int fd, int offset) {
   struct proc* p = myproc();
   struct file* f = NULL;
   struct stat st = { 0 };
+  uint vaddr = addr + MMAP_BASE;
   int m_id;
   if (addr & 0xFFF || length & 0xFFF || length <= 0) return 0;  // return 0: Must be page aligned
   // if (!(BITCHECK(prot, 1))) return 0;            // return 0: PROT_READ must be included
@@ -43,7 +44,7 @@ mmap(uint addr, int length, int prot, int flags, int fd, int offset) {
   }
   acquire(&mtable.lock);
   mtable.m_area[m_id].f = f;
-  mtable.m_area[m_id].addr = addr;
+  mtable.m_area[m_id].addr = addr; // This addr is...
   mtable.m_area[m_id].length = length;
   mtable.m_area[m_id].offset = offset;
   mtable.m_area[m_id].prot = prot;
@@ -71,4 +72,9 @@ mmap(uint addr, int length, int prot, int flags, int fd, int offset) {
 int
 freemem(void) {
   return kmem_len();
+}
+
+int
+pgfintr(void) {
+
 }
