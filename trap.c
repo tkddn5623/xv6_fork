@@ -78,8 +78,7 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
   case T_PGFLT: //project3: Page Fault
-    cprintf("PGFLT OCCUR\n");
-    
+    pgintr();
     break;
   //PAGEBREAK: 13
   default:

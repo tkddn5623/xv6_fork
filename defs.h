@@ -188,10 +188,13 @@ pde_t*          copyuvm(pde_t*, uint);
 void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
-void            clearpteu(pde_t *pgdir, char *uva);
+void            clearpteu(pde_t* pgdir, char* uva);
+int             pgintr(void);  // Page fault handler (specifically for mmap) (project3)
+int             mmap_helper(struct proc*, void*, uint size, void*, int prot); // function that calls 'static mappages' in vm.c
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
 
 // mmap.c (Project3)
-int             freemem(void); //Alias of kmem_len(void)
+
+int             freemem(void); // Alias of kmem_len(void)

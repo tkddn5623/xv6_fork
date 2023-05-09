@@ -60,7 +60,6 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 static int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
-  cprintf("MAPPAGE HERE!\n");
   char* a, * last;
   pte_t *pte;
 
@@ -68,7 +67,6 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
   last = (char*)PGROUNDDOWN(((uint)va) + size - 1);
   for(;;){
     if ((pte = walkpgdir(pgdir, a, 1)) == 0) {
-      cprintf("MAPPAGE return -1!\n");
       return -1;
     }
     if (*pte & PTE_P)
@@ -79,7 +77,6 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
     a += PGSIZE;
     pa += PGSIZE;
   }
-  cprintf("MAPPAGE return 0!\n");
   return 0;
 }
 
@@ -396,3 +393,16 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
+// Page fault handler (specifically for mmap) (project3)
+int
+pgintr(void) {
+  cprintf("I AM PGINTR\n");
+  return 1;
+}
+
+// function that calls 'static mappages' in vm.c
+int
+mmap_helper(struct proc* p, void* va1, uint size, void* va2, int prot) {
+  // If PTE_U isn't given, only kernal can access.
+  return mappages(p->pgdir, va1, size, V2P(va2), prot | PTE_U);
+}
