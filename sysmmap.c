@@ -13,16 +13,14 @@ sys_mmap(void) { //Project3
     argint(4, &fd) < 0 ||
     argint(5, &offset))
     exit();
-  return 0;
-  return -1;
+  return mmap(addr, length, prot, flags ,fd, offset);
 }
 
 int
 sys_munmap(void) { //Project3
   uint addr;
   if (argint(0, (int*)&addr) < 0) exit();
-  return 0;
-  return -1;
+  return munmap(addr);
 }
 
 int

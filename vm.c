@@ -6,6 +6,7 @@
 #include "mmu.h"
 #include "proc.h"
 #include "elf.h"
+#include "mmap.h"
 
 extern char data[];  // defined by kernel.ld
 pde_t *kpgdir;  // for use in scheduler()
@@ -394,10 +395,11 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 // Blank page.
 
 // Page fault handler (specifically for mmap) (project3)
-int
+void
 pgintr(void) {
-  cprintf("I AM PGINTR\n");
-  return 1;
+  struct proc* p = myproc();
+  int mmap_ok = mmap_anony(p);
+  if (!mmap_ok) p->killed |= 1;
 }
 
 // function that calls 'static mappages' in vm.c

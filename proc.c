@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "mmap.h"
 
 struct {
   struct spinlock lock;
@@ -200,7 +201,6 @@ fork(void)
   int i, pid;
   struct proc* np;
   struct proc* curproc = myproc();
-
   // Allocate process.
   if ((np = allocproc()) == 0) {
     return -1;
@@ -221,6 +221,10 @@ fork(void)
   np->vruntime = curproc->vruntime;
   np->timeslice = curproc->timeslice;
   np->timeslice_used = curproc->timeslice_used; //project2
+
+  mmap_fork(np, curproc);  //project3
+
+
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;

@@ -189,7 +189,7 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t* pgdir, char* uva);
-int             pgintr(void);  // Page fault handler (specifically for mmap) (project3)
+void            pgintr(void);  // Page fault handler (specifically for mmap) (project3)
 int             mmap_helper(struct proc*, void*, uint size, void*, int prot); // function that calls 'static mappages' in vm.c
 
 // number of elements in fixed-size array
@@ -197,4 +197,8 @@ int             mmap_helper(struct proc*, void*, uint size, void*, int prot); //
 
 // mmap.c (Project3)
 
+uint            mmap(uint, int, int, int, int, int); //project3
+int             munmap(uint);  // project3
 int             freemem(void); // Alias of kmem_len(void)
+void            mmap_fork(struct proc*, struct proc*);
+int             mmap_anony(struct proc* p);
