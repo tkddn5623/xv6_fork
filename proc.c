@@ -267,6 +267,7 @@ exit(void)
       curproc->ofile[fd] = 0;
     }
   }
+  mmap_exit(curproc); //project3
 
   begin_op();
   iput(curproc->cwd);

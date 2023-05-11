@@ -140,13 +140,15 @@ mmap_fork(struct proc* new, struct proc* curproc) {
 
 int
 mmap_anony(struct proc* p) {
-  int m_id, length, flags, prot, offset;
+  int m_id, length, flags = 0, prot, offset;
+  void* physical_page;
   struct file* f = NULL;
   uint vaddr;
   acquire(&mtable.lock);
   for (m_id = 0; m_id < MAX_MMAPAREA; m_id++) {
     if (mtable.m_area[m_id].p == p && mtable.m_area[m_id].occupied == 0x2) {
       mtable.m_area[m_id].occupied = 0;
+      f = mtable.m_area[m_id].f;
       vaddr = mtable.m_area[m_id].addr;
       length = mtable.m_area[m_id].length;
       flags = mtable.m_area[m_id].flags;
@@ -157,54 +159,27 @@ mmap_anony(struct proc* p) {
   }
   release(&mtable.lock);
   if (m_id == MAX_MMAPAREA) return 0;
-
-  if (BITCHECK(flags, 1)) { // MAP_POPULATE is given.
-    void* physical_page;
-    for (int j = (length + PGSIZE - 1) / PGSIZE, i = 0; i < j; i++) {
-      if ((physical_page = kalloc()) < 0) return 0;                                   //return 0: kalloc function fail
-      else if (BITCHECK(flags, 0)) memset(physical_page, 0, PGSIZE);                  // MAP_ANONYMOUS is given
-      else { // MAP_ANONYMOUS is NOT given
-        f->off = offset;
-        if ((fileread(f, physical_page, PGSIZE)) < 0) return 0;
-      }
-      if ((mmap_helper(p, (void*)(vaddr + i * PGSIZE), PGSIZE, physical_page, prot)) < 0) return 0;
+  for (int j = (length + PGSIZE - 1) / PGSIZE, i = 0; i < j; i++) {
+    if ((physical_page = kalloc()) < 0) return 0;                   // return 0: kalloc function fail
+    else if (BITCHECK(flags, 0)) memset(physical_page, 0, PGSIZE);  // MAP_ANONYMOUS is given
+    else {                                                          // MAP_ANONYMOUS is NOT given
+      f->off = offset;
+      if ((fileread(f, physical_page, PGSIZE)) < 0) return 0;
     }
-    acquire(&mtable.lock);
-    for (m_id = 0; m_id < MAX_MMAPAREA; m_id++) {  // occupied == 0 : regards available.
-      if (!mtable.m_area[m_id].occupied) {
-        mtable.m_area[m_id].occupied = 0x1;
-        mtable.m_area[m_id].f = f;
-        mtable.m_area[m_id].addr = vaddr;
-        mtable.m_area[m_id].length = length;
-        mtable.m_area[m_id].offset = offset;
-        mtable.m_area[m_id].prot = prot;
-        mtable.m_area[m_id].flags = flags;
-        mtable.m_area[m_id].p = p;
-        break;
-      }
-    }
-    release(&mtable.lock);
-    if (m_id == MAX_MMAPAREA) return 0;            // return 0: There is no m_area
+    if ((mmap_helper(p, (void*)(vaddr + i * PGSIZE), PGSIZE, physical_page, prot)) < 0) return 0;
   }
-  else { // MAP_POPULATE is NOT given.
-    acquire(&mtable.lock);
-    for (m_id = 0; m_id < MAX_MMAPAREA; m_id++) {  // occupied == 0 : regards available.
-      if (!mtable.m_area[m_id].occupied) {
-        mtable.m_area[m_id].occupied = 0x2;
-        mtable.m_area[m_id].f = f;
-        mtable.m_area[m_id].addr = vaddr;
-        mtable.m_area[m_id].length = length;
-        mtable.m_area[m_id].offset = offset;
-        mtable.m_area[m_id].prot = prot;
-        mtable.m_area[m_id].flags = flags;
-        mtable.m_area[m_id].p = p;
-        break;
-      }
-    }
-    release(&mtable.lock);
-    if (m_id == MAX_MMAPAREA) return 0;            // return 0: There is no m_area
-  }
-
-  
+  acquire(&mtable.lock);
+  mtable.m_area[m_id].occupied = 0x1;
+  release(&mtable.lock);
   return 1;
+}
+
+void
+mmap_exit(struct proc* p) {
+  int m_id;
+  for (m_id = 0; m_id < MAX_MMAPAREA; m_id++) {
+    if (mtable.m_area[m_id].p == p && mtable.m_area[m_id].occupied == 1) {
+      munmap(mtable.m_area->addr);
+    }
+  }
 }

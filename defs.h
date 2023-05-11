@@ -200,5 +200,6 @@ int             mmap_helper(struct proc*, void*, uint size, void*, int prot); //
 uint            mmap(uint, int, int, int, int, int); //project3
 int             munmap(uint);  // project3
 int             freemem(void); // Alias of kmem_len(void)
-void            mmap_fork(struct proc*, struct proc*);
+void            mmap_fork(struct proc* new, struct proc* curproc);
 int             mmap_anony(struct proc* p);
+void            mmap_exit(struct proc* p);
