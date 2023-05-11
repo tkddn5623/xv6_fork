@@ -222,10 +222,6 @@ fork(void)
   np->timeslice = curproc->timeslice;
   np->timeslice_used = curproc->timeslice_used; //project2
 
-  mmap_fork(np, curproc);  //project3
-
-
-
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
@@ -237,11 +233,11 @@ fork(void)
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
   pid = np->pid;
-
+  
+  mmap_fork(np, curproc);  //project3
+  
   acquire(&ptable.lock);
-
   np->state = RUNNABLE;
-
   release(&ptable.lock);
 
   return pid;
@@ -333,6 +329,7 @@ wait(void)
       return -1;
     }
 
+    
     // Wait for children to exit.  (See wakeup1 call in proc_exit.)
     sleep(curproc, &ptable.lock);  //DOC: wait-sleep
   }
@@ -389,11 +386,13 @@ scheduler(void) //project2
       //  This MIN_GRANULARITY of code prevents too many context switches
       //  (Although this code can ignore the ratio according to the nice value)
       //  Reference: Our book Three picecs 105page. 
+      
       c->proc = next;
       switchuvm(next);
       next->state = RUNNING;
       next->timeslice_used = 0;
 
+      
       swtch(&(c->scheduler), next->context);
       switchkvm();
 
