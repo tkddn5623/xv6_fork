@@ -185,6 +185,7 @@ UPROGS=\
 	_zombie\
 	_test\
 	_test2\
+	_test3\
 
 
 fs.img: mkfs README $(UPROGS)
@@ -259,7 +260,7 @@ EXTRA=\
 	printf.c umalloc.c\
 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
-	test.c test2.c\
+	test.c test2.c test3.c\
 
 dist:
 	rm -rf dist
