@@ -29,9 +29,6 @@ SYSCALL(getpid)
 SYSCALL(sbrk)
 SYSCALL(sleep)
 SYSCALL(uptime)
-SYSCALL(getnice) # project1
-SYSCALL(setnice) # project1
-SYSCALL(ps)      # project1
-SYSCALL(mmap)    # project3
-SYSCALL(munmap)  # project3
-SYSCALL(freemem) # project3
+SYSCALL(swapread)
+SYSCALL(swapwrite)
+SYSCALL(swapstat)

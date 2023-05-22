@@ -23,17 +23,14 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int getnice(int);      //project1
-int setnice(int, int); //project1
-void ps(int);          //project1
-uint mmap(uint addr, int, int, int, int, int); //project3
-int munmap(uint addr);                         //project3
-int freemem(void);                             //project3
+void swapread(const char*, int);
+void swapwrite(const char*, int);
+void swapstat(int*, int*);
 
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);
-void* memmove(void*, const void*, int);
+void *memmove(void*, const void*, int);
 char* strchr(const char*, char c);
 int strcmp(const char*, const char*);
 void printf(int, const char*, ...);

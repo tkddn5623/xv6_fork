@@ -77,9 +77,7 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
-  case T_PGFLT: //project3: Page Fault
-    pgintr();
-    break;
+
   //PAGEBREAK: 13
   default:
     if(myproc() == 0 || (tf->cs&3) == 0){
@@ -104,12 +102,9 @@ trap(struct trapframe *tf)
 
   // Force process to give up CPU on clock tick.
   // If interrupts were on while locks held, would need to check nlock.
-  if (myproc() && myproc()->state == RUNNING && tf->trapno == T_IRQ0 + IRQ_TIMER) {
-    myproc()->runtime++;
-    if (myproc()->timeslice_used < myproc()->timeslice) myproc()->timeslice_used++;
-    else yield();
-  }
-
+  if(myproc() && myproc()->state == RUNNING &&
+     tf->trapno == T_IRQ0+IRQ_TIMER)
+    yield();
 
   // Check if the process has been killed since we yielded
   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)

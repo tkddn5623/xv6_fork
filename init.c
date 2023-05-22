@@ -21,9 +21,6 @@ main(void)
 
   for(;;){
     printf(1, "init: starting sh\n");
-    printf(1, "Student ID: 2021313504\n"); //20230312, Project 0.
-    printf(1, "Name: Sangwoo Jung\n");
-    printf(1, "====xv6 sucessfully boot====\n");
     pid = fork();
     if(pid < 0){
       printf(1, "init: fork failed\n");

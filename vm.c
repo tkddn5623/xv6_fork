@@ -6,7 +6,6 @@
 #include "mmu.h"
 #include "proc.h"
 #include "elf.h"
-#include "mmap.h"
 
 extern char data[];  // defined by kernel.ld
 pde_t *kpgdir;  // for use in scheduler()
@@ -61,16 +60,15 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 static int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
-  char* a, * last;
+  char *a, *last;
   pte_t *pte;
 
   a = (char*)PGROUNDDOWN((uint)va);
   last = (char*)PGROUNDDOWN(((uint)va) + size - 1);
   for(;;){
-    if ((pte = walkpgdir(pgdir, a, 1)) == 0) {
+    if((pte = walkpgdir(pgdir, a, 1)) == 0)
       return -1;
-    }
-    if (*pte & PTE_P)
+    if(*pte & PTE_P)
       panic("remap");
     *pte = pa | perm | PTE_P;
     if(a == last)
@@ -394,17 +392,3 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
-// Page fault handler (specifically for mmap) (project3)
-void
-pgintr(void) {
-  struct proc* p = myproc();
-  int mmap_ok = mmap_anony(p);
-  if (!mmap_ok) p->killed |= 1;
-}
-
-// function that calls 'static mappages' in vm.c
-int
-mmap_helper(struct proc* p, void* va1, uint size, void* va2, int prot) {
-  // If PTE_U isn't given, only kernal can access.
-  return mappages(p->pgdir, va1, size, V2P(va2), prot | PTE_U);
-}

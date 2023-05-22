@@ -10,17 +10,7 @@
 #define MAXOPBLOCKS  10  // max # of blocks any FS op writes
 #define LOGSIZE      (MAXOPBLOCKS*3)  // max data blocks in on-disk log
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
-#define FSSIZE       1000  // size of file system in blocks
+#define FSSIZE       100000  // size of file system in blocks
+#define SWAPBASE	500
+#define SWAPMAX		(100000 - SWAPBASE)
 
-//Project3                               
-#ifndef MMAP_PARAM    // mmap.h also has definitions
-#define MMAP_PARAM
-#define PROT_READ     0x1
-#define PROT_WRITE    0x2
-#define PROT_EXEC	  0x4  // JUST DECORATION :D
-#define MAP_ANONYMOUS 0x1
-#define MAP_POPULATE  0x2
-#define MAX_MMAPAREA  64
-#define MAP_FAILED	  ((void*)0)
-#define MMAP_BASE     0x40000000
-#endif

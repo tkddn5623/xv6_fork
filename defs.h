@@ -52,6 +52,8 @@ struct inode*   nameiparent(char*, char*);
 int             readi(struct inode*, char*, uint, uint);
 void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, char*, uint, uint);
+void swapread(char* ptr, int blkno);
+void swapwrite(char* ptr, int blkno);
 
 // ide.c
 void            ideinit(void);
@@ -68,7 +70,6 @@ char*           kalloc(void);
 void            kfree(char*);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
-int             kmem_len(void); //Project3, Alias of freemem(void)
 
 // kbd.c
 void            kbdintr(void);
@@ -121,9 +122,6 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-int             getnice(int);      //project1
-int             setnice(int, int); //project1
-void            ps(int);           //project1
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -188,18 +186,7 @@ pde_t*          copyuvm(pde_t*, uint);
 void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
-void            clearpteu(pde_t* pgdir, char* uva);
-void            pgintr(void);  // Page fault handler (specifically for mmap) (project3)
-int             mmap_helper(struct proc*, void*, uint size, void*, int prot); // function that calls 'static mappages' in vm.c
+void            clearpteu(pde_t *pgdir, char *uva);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
-
-// mmap.c (Project3)
-
-uint            mmap(uint, int, int, int, int, int); //project3
-int             munmap(uint);  // project3
-int             freemem(void); // Alias of kmem_len(void)
-void            mmap_fork(struct proc* new, struct proc* curproc);
-int             mmap_anony(struct proc* p);
-void            mmap_exit(struct proc* p);

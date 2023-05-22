@@ -33,9 +33,6 @@ struct context {
 };
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
-enum nicerange { NICE_MIN = 0, NICE_DEFAULT = 20, NICE_MAX = 39 };
-enum schedrange { MIN_GRANULARITY = 1, SCHED_LATENCY = 10 }; // project2, UNIT: ticks
-
 
 // Per-process state
 struct proc {
@@ -52,11 +49,6 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  int nice;                    // project1
-  int runtime;                 // project2, UNIT: ticks
-  int vruntime;                // project2, UNIT: ticks
-  int timeslice;               // project2, UNIT: ticks
-  int timeslice_used;          // project2, UNIT: ticks
 };
 
 // Process memory is laid out contiguously, low addresses first:
