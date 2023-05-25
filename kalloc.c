@@ -147,6 +147,7 @@ reclaim() {
       break;
     }
     else {
+      pte_pte_a_clear(p->pgdir, p->vaddr);
       page_lru_head = page_lru_head->next;
     }
     if (p == tail) return 0;
@@ -207,9 +208,6 @@ lru_delete(pde_t* pgdir, char* va) {
       p->prev = (struct page*)0x0;
       num_lru_pages--;
       break;
-    }
-    else {
-      page_lru_head = page_lru_head->next;
     }
   }
   for (int i = 0; i < PGSIZE; i++) {
