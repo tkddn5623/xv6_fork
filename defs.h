@@ -52,8 +52,8 @@ struct inode*   nameiparent(char*, char*);
 int             readi(struct inode*, char*, uint, uint);
 void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, char*, uint, uint);
-void swapread(char* ptr, int blkno);
-void swapwrite(char* ptr, int blkno);
+void            swapread(char* ptr, int blkno);  //project4
+void            swapwrite(char* ptr, int blkno); //project4
 
 // ide.c
 void            ideinit(void);
@@ -70,6 +70,8 @@ char*           kalloc(void);
 void            kfree(char*);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
+int             kmem_len(void); //project3, 4
+void            mappages_helper(void* va, pde_t* pgdir, int pte_u_mask); //project 4
 
 // kbd.c
 void            kbdintr(void);
@@ -186,7 +188,8 @@ pde_t*          copyuvm(pde_t*, uint);
 void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
-void            clearpteu(pde_t *pgdir, char *uva);
+void            clearpteu(pde_t* pgdir, char* uva);
+int             is_pte_u(pde_t* pgdir, const void* va); //project4
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

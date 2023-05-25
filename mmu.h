@@ -188,3 +188,5 @@ struct page{
 
 
 #endif
+
+#define PTE_A (0x20) //project4

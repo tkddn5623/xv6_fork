@@ -70,12 +70,14 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
       return -1;
     if(*pte & PTE_P)
       panic("remap");
+    mappages_helper(va, pgdir, *pte & PTE_U);
     *pte = pa | perm | PTE_P;
-    if(a == last)
+    if (a == last)
       break;
     a += PGSIZE;
     pa += PGSIZE;
   }
+  
   return 0;
 }
 
@@ -392,3 +394,9 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
+int
+is_pte_u(pde_t* pgdir, const void* va) {
+  pte_t* pte = walkpgdir(pgdir, va, 0);
+  if (!pte) return 0;
+  return *pte & PTE_U;
+}

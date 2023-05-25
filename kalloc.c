@@ -24,9 +24,11 @@ struct {
 } kmem;
 
 struct page pages[PHYSTOP/PGSIZE];
-struct page *page_lru_head;
+struct page* page_lru_head;
 int num_free_pages;
-int num_lru_pages;
+int num_lru_pages = 0;
+int swapbitmap[PGSIZE];
+static int reclaim();
 
 // Initialization happens in two phases.
 // 1. main() calls kinit1() while still using entrypgdir to place just
@@ -88,13 +90,12 @@ char*
 kalloc(void)
 {
   struct run *r;
-
-//try_again:
   if(kmem.use_lock)
     acquire(&kmem.lock);
+try_again:
   r = kmem.freelist;
-//  if(!r && reclaim())
-//	  goto try_again;
+  if (!r && reclaim())
+	  goto try_again;
   if(r)
     kmem.freelist = r->next;
   if(kmem.use_lock)
@@ -102,3 +103,64 @@ kalloc(void)
   return (char*)r;
 }
 
+/* Return current number of free memory pages [project3, 4]*/
+int
+kmem_len(void) {
+  struct run* r;
+  int i = 0;
+  if (kmem.use_lock)
+    acquire(&kmem.lock);
+  for (r = kmem.freelist; r; r = r->next) {
+    i++;
+  }
+  if (kmem.use_lock)
+    release(&kmem.lock);
+  return i;
+}
+
+void
+mappages_helper(void* va, pde_t* pgdir, int pte_u_mask) {
+  struct page* p;
+  if (!pte_u_mask) return;
+  // cprintf("It will be HELPED\n");
+  if (!page_lru_head) {
+    page_lru_head = &pages[0];
+    pages[0].next = &pages[0];
+    pages[0].prev = &pages[0];
+    pages[0].pgdir = pgdir;
+    pages[0].vaddr = va;
+  }
+  else {
+    int i;
+    p = page_lru_head->prev;
+    for (i = 0; i < PHYSTOP / PGSIZE; i++) {
+      if (pages[i].next) break;
+    }
+    if (i == PHYSTOP / PGSIZE)
+      panic("full page array");
+    pages[i].next = page_lru_head;
+    pages[i].prev = p;
+    p->next = &pages[i];
+    page_lru_head->prev = &pages[i];
+  }
+}
+
+static int
+reclaim() {
+  struct page* p, * head = page_lru_head;
+  if (!head) return 0; //OOM
+  for (p = head;; p = p->next) {
+    if (is_pte_u(p->pgdir, p->vaddr)) {
+      struct page* next = p->next;
+      struct page* prev = p->prev;
+      next->prev = prev;
+      prev->next = next;
+      kmem.freelist = p->vaddr;
+      break;
+    }
+    else {
+      page_lru_head = page_lru_head->next;
+    }
+  }
+  return 1;
+}
