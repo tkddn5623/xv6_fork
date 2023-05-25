@@ -70,8 +70,8 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
       return -1;
     if(*pte & PTE_P)
       panic("remap");
-    mappages_helper(va, pgdir, *pte & PTE_U);
     *pte = pa | perm | PTE_P;
+    lru_insert(pgdir, va, *pte & PTE_U);
     if (a == last)
       break;
     a += PGSIZE;
@@ -274,6 +274,7 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
         panic("kfree");
       char *v = P2V(pa);
       kfree(v);
+      lru_delete(pgdir, v); //project4
       *pte = 0;
     }
   }
@@ -334,7 +335,8 @@ copyuvm(pde_t *pgdir, uint sz)
     if((mem = kalloc()) == 0)
       goto bad;
     memmove(mem, (char*)P2V(pa), PGSIZE);
-    if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0) {
+    lru_insert(pgdir, mem, *pte & PTE_U); //project4
+    if (mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0) {
       kfree(mem);
       goto bad;
     }
@@ -393,10 +395,73 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 // Blank page.
 //PAGEBREAK!
 // Blank page.
-
 int
-is_pte_u(pde_t* pgdir, const void* va) {
+pte_logical_and(pde_t* pgdir, const void* va, int flag) {
   pte_t* pte = walkpgdir(pgdir, va, 0);
   if (!pte) return 0;
-  return *pte & PTE_U;
+  return *pte & flag;
+}
+int
+pte_pte_a_clear(pde_t* pgdir, const void* va) {
+  pte_t* pte = walkpgdir(pgdir, va, 0);
+  if (!pte) return -1;
+  *pte &= ~PTE_A;
+  return 0;
+}
+int
+pte_pte_p_set(pde_t* pgdir, const void* va) {
+  pte_t* pte = walkpgdir(pgdir, va, 0);
+  if (!pte) return -1;
+  *pte &= PTE_P;
+  return 0;
+}
+int
+pte_pte_p_clear(pde_t* pgdir, const void* va) {
+  pte_t* pte = walkpgdir(pgdir, va, 0);
+  if (!pte) return -1;
+  *pte &= ~PTE_P;
+  return 0;
+}
+int
+pte_pte_swap_set(pde_t* pgdir, const void* va) {
+  pte_t* pte = walkpgdir(pgdir, va, 0);
+  if (!pte) return -1;
+  *pte &= PTE_SWAP;
+  return 0;
+}
+int
+pte_pte_swap_clear(pde_t* pgdir, const void* va) {
+  pte_t* pte = walkpgdir(pgdir, va, 0);
+  if (!pte) return -1;
+  *pte &= ~PTE_SWAP;
+  return 0;
+}
+int
+pte_set_swapoffset(pde_t* pgdir, const void* va, int off){
+  pte_t* pte = walkpgdir(pgdir, va, 0);
+  if (!pte) return -1;
+  *pte &= ((1 << 12) - 1);
+  *pte |= off << 12;
+  return 0;
+}
+void
+pgintr(uint rcr) {
+  struct proc* p = myproc();
+  pte_t* pte = walkpgdir(p->pgdir, (char*)rcr, 0);
+  if (*pte & PTE_SWAP) {
+    int result = swapin(p->pgdir, rcr);
+    if (result == -1) p->killed |= 1;
+  }
+  else {
+    p->killed |= 1;
+  }
+}
+
+//Change PTE value with physical address& set PTE_P
+void
+swapin_helper(pde_t* pgdir, char* va, char* np) {
+  pte_t* pte = walkpgdir(pgdir, va, 0);
+  *pte &= ((1 << 12) - 1);
+  *pte |= PTE_P;
+  *pte &= (V2P(np) << 12);
 }

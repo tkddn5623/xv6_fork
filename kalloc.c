@@ -7,6 +7,7 @@
 #include "param.h"
 #include "memlayout.h"
 #include "mmu.h"
+#include "fs.h"
 #include "spinlock.h"
 
 void freerange(void *vstart, void *vend);
@@ -25,7 +26,7 @@ struct {
 
 struct page pages[PHYSTOP/PGSIZE];
 struct page* page_lru_head;
-int num_free_pages;
+// int num_free_pages;
 int num_lru_pages = 0;
 int swapbitmap[PGSIZE];
 static int reclaim();
@@ -92,12 +93,14 @@ kalloc(void)
   struct run *r;
   if(kmem.use_lock)
     acquire(&kmem.lock);
-try_again:
-  r = kmem.freelist;
-  if (!r && reclaim())
-	  goto try_again;
-  if(r)
+  do {
+    r = kmem.freelist;
+  } while (!r && reclaim());
+  if (r) {
     kmem.freelist = r->next;
+  } else {
+    cprintf("Out of memory\n");
+  } 
   if(kmem.use_lock)
     release(&kmem.lock);
   return (char*)r;
@@ -118,11 +121,55 @@ kmem_len(void) {
   return i;
 }
 
+static int
+reclaim() {
+  struct page* p, * head = page_lru_head, * tail;
+  if (!head) return 0; //Fail
+  uint blkno;
+  tail = head->prev;
+  for (p = head;; p = p->next) {
+    if (!pte_logical_and(p->pgdir, p->vaddr, PTE_A)) {
+      struct page* next = p->next;
+      struct page* prev = p->prev;
+      next->prev = prev;
+      prev->next = next;
+      p->next = (struct page*)0x0;
+      p->prev = (struct page*)0x0;
+      
+      num_lru_pages--;
+      blkno = balloc_for_swap();
+      swapwrite(p->vaddr, blkno);   //1. Use swapwrite() function
+      swapbitmap[blkno] = (uint)p->vaddr; //Bitmap entry
+      pte_pte_swap_set(p->pgdir, p->vaddr);          //Marked unused bits as for SWAP
+      pte_pte_p_clear(p->pgdir, p->vaddr);           //3. PTE_P will be cleared
+      pte_set_swapoffset(p->pgdir, p->vaddr, blkno); //2. Victim page’s PTE will be set as swap space offset
+      kmem.freelist = (struct run*)(p->vaddr);
+      break;
+    }
+    else {
+      page_lru_head = page_lru_head->next;
+    }
+    if (p == tail) return 0;
+  }
+  return 1;
+}
+
+int
+swapin(pde_t* pgdir, uint va) {
+  char* np = kalloc();
+  if (!np) return -1;
+  uint blkno = va >> 12;
+  swapbitmap[blkno] = 0; //Bit in bitmap is cleared when page swapped in
+  swapread(np, blkno);
+  swapin_helper(pgdir, (char*)va, np);
+  return 0;
+}
+
 void
-mappages_helper(void* va, pde_t* pgdir, int pte_u_mask) {
-  struct page* p;
+lru_insert(pde_t* pgdir, void* va, int pte_u_mask) {
   if (!pte_u_mask) return;
-  // cprintf("It will be HELPED\n");
+  struct page* p;
+  num_lru_pages++;
   if (!page_lru_head) {
     page_lru_head = &pages[0];
     pages[0].next = &pages[0];
@@ -136,7 +183,7 @@ mappages_helper(void* va, pde_t* pgdir, int pte_u_mask) {
     for (i = 0; i < PHYSTOP / PGSIZE; i++) {
       if (pages[i].next) break;
     }
-    if (i == PHYSTOP / PGSIZE)
+    if (i >= PHYSTOP / PGSIZE)
       panic("full page array");
     pages[i].next = page_lru_head;
     pages[i].prev = p;
@@ -145,22 +192,28 @@ mappages_helper(void* va, pde_t* pgdir, int pte_u_mask) {
   }
 }
 
-static int
-reclaim() {
+//Present pages should be freed, set PTE bits to 0 and remove them from LRU list
+void
+lru_delete(pde_t* pgdir, char* va) { 
   struct page* p, * head = page_lru_head;
-  if (!head) return 0; //OOM
+  if (!head) return;
   for (p = head;; p = p->next) {
-    if (is_pte_u(p->pgdir, p->vaddr)) {
+    if (p->vaddr == va && p->next) {
       struct page* next = p->next;
       struct page* prev = p->prev;
       next->prev = prev;
       prev->next = next;
-      kmem.freelist = p->vaddr;
+      p->next = (struct page*)0x0;
+      p->prev = (struct page*)0x0;
+      num_lru_pages--;
       break;
     }
     else {
       page_lru_head = page_lru_head->next;
     }
   }
-  return 1;
+  for (int i = 0; i < PGSIZE; i++) {
+    if (swapbitmap[i] == (uint)va) swapbitmap[i] = 0; //cleared in bitmap and set PTE bits to 0
+  }
+  return;
 }

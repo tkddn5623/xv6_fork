@@ -54,6 +54,7 @@ void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, char*, uint, uint);
 void            swapread(char* ptr, int blkno);  //project4
 void            swapwrite(char* ptr, int blkno); //project4
+uint            balloc_for_swap(void);           //project4
 
 // ide.c
 void            ideinit(void);
@@ -71,7 +72,9 @@ void            kfree(char*);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
 int             kmem_len(void); //project3, 4
-void            mappages_helper(void* va, pde_t* pgdir, int pte_u_mask); //project 4
+void            lru_insert(pde_t* pgdir, void* va, int pte_u_mask); //project4
+void            lru_delete(pde_t* pgdir, char* va);                 //project4
+int             swapin(pde_t* pgdir, uint va);                      //project4
 
 // kbd.c
 void            kbdintr(void);
@@ -189,7 +192,15 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t* pgdir, char* uva);
-int             is_pte_u(pde_t* pgdir, const void* va); //project4
+int             pte_logical_and(pde_t* pgdir, const void* va, int flag);   //project4
+int             pte_pte_a_clear(pde_t* pgdir, const void* va);             //project4
+int             pte_pte_p_set(pde_t* pgdir, const void* va);               //project4
+int             pte_pte_p_clear(pde_t* pgdir, const void* va);             //project4
+int             pte_pte_swap_set(pde_t* pgdir, const void* va);            //project4
+int             pte_pte_swap_clear(pde_t* pgdir, const void* va);          //project4
+int             pte_set_swapoffset(pde_t* pgdir, const void* va, int off); //project4
+void            pgintr(uint rcr);                    // Page fault handler2 (project4)
+void            swapin_helper(pde_t* pgdir, char* va, char* np);           //project4
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

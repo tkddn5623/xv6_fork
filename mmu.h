@@ -189,4 +189,5 @@ struct page{
 
 #endif
 
-#define PTE_A (0x20) //project4
+#define PTE_A (0x20)     //project4
+#define PTE_SWAP (0x100) //project4

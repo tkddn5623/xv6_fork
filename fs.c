@@ -708,4 +708,7 @@ void swapwrite(char* ptr, int blkno)
 	}
 }
 
-
+uint
+balloc_for_swap(void) {
+  return balloc(T_FILE);
+}
